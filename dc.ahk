@@ -37,13 +37,13 @@ GetConnectionStatus(adapter, status) {
     if status not in 0,2   ; Disconnected = 0, Connected = 2
     {
         Loop  {
-            Sleep, 10
+            Sleep, 50
             for adapter in wmi.ExecQuery("Select * from Win32_NetworkAdapter Where Index=" . adapter.Index)
             status := adapter.NetConnectionStatus
         } until status = 0 || status = 2 || (A_Index = 20 && failed := true)
         if failed  {
-            MsgBox, Failed to get the status!
-            return
+            ;When in doubt return 0 - chances are the adapter is already disabled
+            return 0
         }
     }
     return status
