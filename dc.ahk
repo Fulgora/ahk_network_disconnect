@@ -3,15 +3,29 @@
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
-$F12:: ToggleNetwork()
+global DisabledAdapters := []
+global DisabledInterfaceNames := []
 
-ToggleNetwork()  {
+$F11:: EnableNetwork()
+$F12:: DisableNetwork()
+
+EnableNetwork()  {
+    for index, adapter in DisabledAdapters {
+        ToggleAdapter(adapter, DisabledInterfaceNames[index], 0)
+    }
+    DisabledAdapters := []
+    DisabledInterfaceNames := []
+}
+
+DisableNetwork()  {
     ;Disable WiFi
     wmi := ComObjGet("winmgmts:")
     for adapter in wmi.ExecQuery("Select * from Win32_NetworkAdapter")
-        if (InStr(adapter.name, "ethernet") or InStr(adapter.name, "wireless")) && (interfaceName := adapter.NetConnectionID) && status := adapter.NetConnectionStatus
+        if (InStr(adapter.name, "wireless") or InStr(adapter.name, "ethernet")) && (interfaceName := adapter.NetConnectionID) && status := adapter.NetConnectionStatus
             if (GetConnectionStatus(adapter, status) == 2) {
                 ToggleAdapter(adapter, interfaceName, status)
+                DisabledAdapters.Push(adapter)
+                DisabledInterfaceNames.Push(interfaceName)
             }               
     if (interfaceName = "" || status = "")  {
         MsgBox, Failed to get the interfaceName!
